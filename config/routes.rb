@@ -1,7 +1,7 @@
+require 'sidekiq/web'
+
 Rails.application.routes.draw do
-
 	root "home#index"
-
   get "/admin", to: 'home#index'
 
 	namespace :api do
@@ -11,8 +11,6 @@ Rails.application.routes.draw do
   	end
   end
 
-
-
 	mount ActionCable.server => '/cable'
-
+  mount Sidekiq::Web => "/sidekiq"
 end
