@@ -9,7 +9,7 @@ class UpdateCurrencyRatesJob < ApplicationJob
  		else
 
 			begin
-				response = HTTParty.get('https://api.exchangeratesapi.io/latest?base=USD')
+				response = HTTParty.get('https://api.apilayer.com/exchangerates_data/latest?symbols=RUB&base=USD', headers: { 'apikey' => Rails.application.credentials[Rails.env.to_sym][:apilayer][:api_key] })
 			rescue => e
 			  logger.error "..."
 			ensure

@@ -1,7 +1,7 @@
 source 'https://rubygems.org'
 git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
-ruby '2.6.3'
+ruby '2.6.10'
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
 gem 'rails', '~> 6.0.3'
@@ -24,7 +24,6 @@ gem 'redis', '~> 4.1.4'
 gem 'sidekiq', '~> 6.0.6'
 gem 'whenever', '~> 1.0.0'
 gem 'httparty', '~> 0.17.3'
-gem 'foreman'
 # Use Active Model has_secure_password
 # gem 'bcrypt', '~> 3.1.7'
 

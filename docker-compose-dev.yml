@@ -1,0 +1,81 @@
+version: '3'
+services:
+  postgres:
+    image: 'postgres:14.4-alpine'
+    volumes:
+      - '~/docker/volumes/currency_rate/development/postgresql:/var/lib/postgresql/data'
+    # Database name, user name, user password are taken from those environment variables.
+    # Database is created there and no need to run rails db:create.
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_DB=currency_rate_dev
+      - POSTGRES_USER=currency_rate_dev
+      - POSTGRES_PASSWORD=currency_rate_dev
+    hostname: 'postgres'
+    expose:
+      - '5432'
+    ports:
+      - '5432:5432'
+
+  redis:
+    image: 'redis:7.0.4-alpine'
+    volumes:
+      - '~/docker/volumes/currency_rate/development/redis:/data'
+    hostname: 'redis'
+    ports:
+      - '6379:6379'
+
+  sidekiq:
+    build:
+      context: ./
+      dockerfile: Dockerfile-sidekiq.dev
+    volumes:
+      - '/sidekiq/node_modules'
+      - './:/sidekiq'
+    environment:
+      - RAILS_ENV=development
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=currency_rate_dev
+      - POSTGRES_USER=currency_rate_dev
+      - POSTGRES_PASSWORD=currency_rate_dev
+      - REDIS_URL_CACHE=redis://redis:6379/0
+      - REDIS_URL_ACTION_CABLE=redis://redis:6379/1
+      - REDIS_URL_SIDEKIQ=redis://redis:6379/2
+    depends_on:
+      - postgres
+      - redis
+    restart: on-failure
+    # Here the cron jobs start before the sidekiq server is started, it needs to be addressed.
+    command: sh -c '. ~/.bashrc && bundle exec whenever --update-crontab && service cron restart && bundle exec sidekiq -r ./ --environment development | tee -a ./log/sidekiq-development.log'
+
+  currency_rate_app:
+    build:
+      dockerfile: Dockerfile-currency_rate_app.dev
+      context: ./
+    volumes:
+      - '/currency_rate_app/node_modules'
+      - './:/currency_rate_app'
+    environment:
+      - RAILS_ENV=development
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=currency_rate_dev
+      - POSTGRES_USER=currency_rate_dev
+      - POSTGRES_PASSWORD=currency_rate_dev
+      - REDIS_URL_CACHE=redis://redis:6379/0
+      - REDIS_URL_ACTION_CABLE=redis://redis:6379/1
+      - REDIS_URL_SIDEKIQ=redis://redis:6379/2
+    hostname: 'currency_rate_app'
+    expose:
+      - '3000'
+    ports:
+      - '3000:3000'
+    depends_on:
+      - postgres
+      - redis
+      - sidekiq
+    restart: on-failure
+    # Server has to listen to ip 0.0.0.0 within the container. Because the access from outside the container will not arrive via 127.0.0.1/localhost.
+    # By default in development rails will listen to ip 127.0.0.1/localhost.
+    command: sh -c '. ~/.bashrc && rm -f tmp/pids/server.pid && rails db:migrate && rails server --binding 0.0.0.0 --port 3000 --environment=development'
