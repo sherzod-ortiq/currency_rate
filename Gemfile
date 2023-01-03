@@ -23,7 +23,7 @@ gem 'jbuilder', '~> 2.7'
 gem 'redis', '~> 4.1.4'
 gem 'sidekiq', '~> 6.0.6'
 gem 'whenever', '~> 1.0.0'
-gem 'httparty', '~> 0.17.3'
+gem 'httparty', '~> 0.21.0'
 # Use Active Model has_secure_password
 # gem 'bcrypt', '~> 3.1.7'
 
